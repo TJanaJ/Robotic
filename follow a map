@@ -1,0 +1,234 @@
+#include <Makeblock.h>
+#include <Arduino.h>
+#include <SoftwareSerial.h>
+#include <Wire.h>
+
+MeDCMotor MotorL(M1);  
+MeDCMotor MotorR(M2);
+MeUltrasonicSensor UltrasonicSensor(PORT_3);
+int moveSpeed = 160;
+int Distance = 500;
+int Angle = 615;
+int x = 1;
+int y = 9;
+int i = 1;
+boolean Position = false;
+boolean Direction = false;
+int Maps[11][7] = {
+  { 0, 0, 0, 0, 0, 0, 0},
+  { 0, 0, 0, 1, 1, 1, 0},
+  { 0, 0, 0, 1, 0, 1, 0},
+  { 0, 0, 0, 1, 0, 1, 0},
+  { 0, 0, 0, 1, 0, 1, 0},
+  { 0, 0, 0, 1, 0, 1, 0},
+  { 0, 0, 0, 1, 0, 1, 0},
+  { 0, 1, 1, 1, 0, 1, 0},
+  { 0, 1, 0, 0, 1, 1, 0},
+  { 0, 1, 0, 0, 1, 0, 0},
+  { 0, 0, 0, 0, 0, 0, 0},
+};
+
+void setup()
+{
+}
+
+void loop()
+{
+while ( i <= 5)
+{
+  if (Direction == true && Position == true)
+  {
+   if(i == Maps[y][x + 1])
+   {
+      Forward();
+      delay(Distance);
+      x = x + 1;
+      i = 1;
+      break;
+   }
+   if(i == Maps[y + 1][x])
+   {
+      TurnRight();
+      delay(Angle);
+      Forward();
+      delay(Distance);
+      Position = false;
+      y = y + 1;
+      i = 1;
+      break;
+   }
+    if(i == Maps[y - 1][x])
+    {
+      TurnLeft();
+      delay(Angle);
+      Forward();
+      delay(Distance);
+      Position = false;
+      Direction = false;
+      y = y - 1;
+      i = 1;
+      break;
+    }
+  }
+  if (Direction == true && Position == false)
+  {
+    if( i == Maps[y + 1][x])
+    {
+     Forward();
+      delay(Distance);
+      y = y + 1;
+      i = 1;
+      break;
+    }  
+    if(i == Maps[y][x + 1])
+    {
+      TurnLeft();
+      delay(Angle);
+      Forward();
+      delay(Distance);
+      Position = true;
+      x = x + 1;
+      i = 1;
+      break;
+    }
+    if(i == Maps[y][x - 1])
+    {
+      TurnRight();
+      delay(Angle);
+      Forward();
+      delay(Distance);
+      Position = true;
+      Direction = false;
+      x = x - 1;
+      i = 1;
+      break;
+    }
+  }
+    if (Direction == false && Position == true)
+  {
+   if(i == Maps[y][x - 1])
+   {
+      Forward();
+      delay(Distance);
+      x = x - 1;
+      i = 1;
+      break;
+   }  
+   if(i == Maps[y - 1][x])
+   {
+      TurnRight();
+      delay(Angle);
+      Forward();
+      delay(Distance);
+      Position = false;
+      Direction = false;
+      y = y - 1;
+      i = 1;
+      break;
+   }
+   if(i == Maps[y + 1][x])
+    {
+      TurnLeft();
+      delay(Angle);
+      Forward();
+      delay(Distance);
+      Direction = true;
+      Position = false;
+      y = y + 1;
+      i = 1;
+      break;
+    }
+  }
+  if (Direction == false && Position == false)
+  {
+    if( i == Maps[y - 1][x])
+    {
+     Forward();
+      delay(Distance);
+      y = y - 1;
+      i = 1;
+      break;
+    }  
+    if(i == Maps[y][x - 1])
+    {
+      TurnLeft();
+      delay(Angle);
+      Forward();
+      delay(Distance);
+      Position = true;
+      x = x - 1;
+      i = 1;
+      break;
+    }
+    if(i == Maps[y][x + 1])
+    {
+      TurnRight();
+      delay(Angle);
+      Forward();
+      delay(Distance);
+      Position = true;
+      Direction = true;
+      x = x + 1;
+      i = 1;
+      break;
+    }
+  }
+  i++;
+}
+if (i == 5)
+{
+  Right360();
+}
+if (i > 5)
+{
+Stop();
+delay(1000);
+}
+
+}
+
+
+void Forward()
+{
+    int distance;
+    distance = UltrasonicSensor.distanceCm();
+    Serial.println(distance);
+    
+  if(distance>2 && distance<15)
+  {
+    Stop();
+    delay (1000);
+  }
+ else
+ {
+  MotorL.run(moveSpeed);
+  MotorR.run(moveSpeed);
+ }
+}
+void Backward()
+{
+  MotorL.run(-moveSpeed);
+  MotorR.run(-moveSpeed);
+}
+void TurnLeft()
+{
+  MotorL.run(-moveSpeed);
+  MotorR.run(moveSpeed);
+}
+void TurnRight()
+{
+  MotorL.run(moveSpeed);
+  MotorR.run(-moveSpeed);
+}
+void Stop()
+{
+  MotorL.run(0);
+  MotorR.run(0);
+}
+
+void Right360()
+{
+   MotorL.run(moveSpeed);
+   MotorR.run(-moveSpeed); 
+   delay (4 * Angle);
+}
